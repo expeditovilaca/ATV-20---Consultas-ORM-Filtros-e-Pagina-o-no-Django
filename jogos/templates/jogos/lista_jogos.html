@@ -1,0 +1,149 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusGames — Catálogo Interativo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'jogos/style.css' %}">
+</head>
+<body>
+    <!-- Efeitos de luz ambiente ao fundo -->
+    <div class="glow-orb orb-top-right"></div>
+    <div class="glow-orb orb-mid-left"></div>
+
+    <!-- Navbar Superior -->
+    <header class="navbar container">
+        <div class="logo">
+            <span class="logo-neon">NEXUS</span>GAMES
+        </div>
+        <nav class="nav-links">
+            <a href="{% url 'lista_jogos' %}" class="active">Catálogo</a>
+            <a href="#explorar">Explorar</a>
+            <a href="/admin/" target="_blank">Admin</a>
+        </nav>
+        <a href="{% url 'lista_jogos' %}" class="btn-neon-pill">Limpar Filtros</a>
+    </header>
+
+    <!-- Seção Hero (Inspirada no topo da Imagem 2) -->
+    <section class="hero container">
+        <div class="hero-content">
+            <span class="eyebrow">BIBLIOTECA DIGITAL & ORM DJANGO</span>
+            <h1>Descubra Jogos <br><span class="text-gradient">Nova Geração</span></h1>
+            <p>Explore títulos icônicos, filtre por estúdio desenvolvedor ou plataforma e navegue pelo acervo completo da nossa dupla.</p>
+            <div class="hero-actions">
+                <a href="#explorar" class="btn-neon-pill">Explorar Acervo</a>
+                <span class="badge-outline">{{ page_obj.paginator.count }} jogos catalogados</span>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="cyber-frame">
+                <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80" alt="Setup Gamer Neon">
+            </div>
+        </div>
+    </section>
+
+    <!-- Barra de Pesquisa e Filtros Dinâmicos (RF04 e RF05) -->
+    <main id="explorar" class="container">
+        <div class="section-header">
+            <h2>Explorar Catálogo</h2>
+            <span class="page-indicator">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        </div>
+
+        <form method="GET" action="{% url 'lista_jogos' %}" class="filter-bar">
+            <div class="input-group">
+                <input type="text" name="q" value="{{ busca }}" placeholder="Pesquisar jogo pelo nome...">
+            </div>
+
+            <div class="input-group">
+                <select name="desenvolvedora">
+                    <option value="">Todas as Desenvolvedoras</option>
+                    {% for dev in desenvolvedoras %}
+                        <option value="{{ dev.id }}" {% if desenvolvedora_selecionada == dev.id|stringformat:"s" %}selected{% endif %}>
+                            {{ dev.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="input-group">
+                <select name="plataforma">
+                    <option value="">Todas as Plataformas</option>
+                    {% for plat in plataformas %}
+                        <option value="{{ plat.id }}" {% if plataforma_selecionada == plat.id|stringformat:"s" %}selected{% endif %}>
+                            {{ plat.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn-neon-pill">Filtrar</button>
+        </form>
+
+        <!-- Grid de Cards (5 por página - RF03 e RF06) -->
+        <div class="cards-grid">
+            {% for jogo in page_obj %}
+                <article class="game-card">
+                    <div class="card-thumb">
+                        {% if jogo.capa_url %}
+                            <img src="{{ jogo.capa_url }}" alt="{{ jogo.nome }}">
+                        {% else %}
+                            <div class="placeholder-art">{{ jogo.nome|slice:":2"|upper }}</div>
+                        {% endif %}
+                        <span class="tag-platform">{{ jogo.plataforma.nome }}</span>
+                    </div>
+                    <div class="card-body">
+                        <h3>{{ jogo.nome }}</h3>
+                        <p class="dev-name">{{ jogo.desenvolvedora.nome }}</p>
+                        <div class="card-footer">
+                            <span class="genre-label">{{ jogo.genero }}</span>
+                            <span class="year-badge">{{ jogo.ano_lancamento }}</span>
+                        </div>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="empty-state">
+                    <p>Nenhum jogo encontrado com os filtros selecionados.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paginação com Preservação de Filtros (RF06 e RF07) -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination-wrapper">
+            {% if page_obj.has_previous %}
+                <a class="btn-dark-pill" href="?page={{ page_obj.previous_page_number }}&q={{ busca }}&desenvolvedora={{ desenvolvedora_selecionada }}&plataforma={{ plataforma_selecionada }}">
+                    ← Anterior
+                </a>
+            {% else %}
+                <span class="btn-dark-pill disabled">← Anterior</span>
+            {% endif %}
+
+            <span class="pagination-info">
+                Página <strong>{{ page_obj.number }}</strong> de <strong>{{ page_obj.paginator.num_pages }}</strong>
+            </span>
+
+            {% if page_obj.has_next %}
+                <a class="btn-neon-pill" href="?page={{ page_obj.next_page_number }}&q={{ busca }}&desenvolvedora={{ desenvolvedora_selecionada }}&plataforma={{ plataforma_selecionada }}">
+                    Próxima →
+                </a>
+            {% else %}
+                <span class="btn-dark-pill disabled">Próxima →</span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Rodapé (Inspirado na base da Imagem 2) -->
+    <footer class="footer container">
+        <div>
+            <div class="logo"><span class="logo-neon">NEXUS</span>GAMES</div>
+            <p class="footer-desc">Projeto Prático de Programação para Internet — Django 5 ORM, Filtros e Paginação.</p>
+        </div>
+        <div class="footer-credits">
+            <p>Desenvolvido por: <strong>Integrante 1 & Integrante 2</strong></p>
+        </div>
+    </footer>
+</body>
+</html>
